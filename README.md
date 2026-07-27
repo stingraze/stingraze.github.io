@@ -2,6 +2,8 @@
 
 PocketBox is a dependency-free, BusyBox-inspired **virtual shell** written in plain JavaScript. It is designed to run from local files or a simple static web server.
 
+*Please note that this is still a work in progress, and some things might not work.
+
 It does **not** execute native programs, open a real device shell, or access the host filesystem. All commands operate on a small in-memory virtual filesystem.
 
 ## Included modes
