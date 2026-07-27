@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>PocketBox Shell - HTML4 Legacy</title>
+  <style type="text/css">
+    body {
+      margin: 4px;
+      padding: 0;
+      color: #00ff66;
+      background: #000000;
+      font-family: Courier New, Courier, monospace;
+      font-size: 12px;
+    }
+    table.shell { width: 100%; border: 1px solid #336644; background: #001108; }
+    table.editor { width: 100%; border: 1px solid #557755; background: #001108; }
+    td.title { padding: 4px; color: #ffffff; background: #00331a; font-weight: bold; }
+    td.notice { padding: 4px; color: #cccccc; background: #111111; font-family: Arial, sans-serif; font-size: 10px; }
+    td.output { padding: 3px; }
+    textarea {
+      width: 98%;
+      height: 280px;
+      color: #00ff66;
+      background: #000000;
+      border: 1px solid #225533;
+      font-family: Courier New, Courier, monospace;
+      font-size: 12px;
+    }
+    input.command {
+      width: 65%;
+      color: #00ff66;
+      background: #000000;
+      border: 1px solid #55aa77;
+      font-family: Courier New, Courier, monospace;
+      font-size: 12px;
+    }
+    input.button { font-size: 11px; }
+    input.editorcommand {
+      width: 65%;
+      color: #ffffff;
+      background: #000000;
+      border: 1px solid #55aa77;
+      font-family: Courier New, Courier, monospace;
+      font-size: 12px;
+    }
+    textarea.editorarea { height: 330px; color: #ffffff; }
+    .prompt { white-space: nowrap; }
+    .editorstatus { color: #cccccc; font-size: 10px; }
+    a.download { color: #99ffbb; font-weight: bold; }
+
+  </style>
+  <script language="JScript" type="text/javascript" src="pocketbox-core.js"></script>
+  <script language="JScript" type="text/javascript" src="pocketbox-security.js"></script>
+  <script language="JScript" type="text/javascript" src="pocketbox-network.js"></script>
+  <script language="JScript" type="text/javascript" src="legacy-ui.js"></script>
+</head>
+<body onload="return LegacyUI.init();">
+  <table id="shellTable" class="shell" border="0" cellspacing="0" cellpadding="0">
+    <tr><td class="title">PocketBox Shell - HTML4 Legacy Mode</td></tr>
+    <tr><td class="notice">Virtual sandbox only. No real device files or native programs are available.</td></tr>
+    <tr>
+      <td class="output">
+        <textarea id="terminalOutput" name="terminalOutput" readonly="readonly" wrap="off"></textarea>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:4px;">
+        <form id="shellform" name="shellform" action="#" onsubmit="return LegacyUI.submit();">
+          <span id="promptLabel" class="prompt">$</span>
+          <input id="commandInput" name="commandInput" class="command" type="text" value="" onkeydown="return LegacyUI.keyDown(window.event);">
+          <input class="button" type="submit" value="Run">
+        </form>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:4px;">
+        <input class="button" type="button" value="help" onclick="LegacyUI.quick('help');">
+        <input class="button" type="button" value="ls -l" onclick="LegacyUI.quick('ls -l');">
+        <input class="button" type="button" value="pwd" onclick="LegacyUI.quick('pwd');">
+        <input class="button" type="button" value="README" onclick="LegacyUI.quick('cat README.txt');">
+        <input class="button" type="button" value="vi notes.txt" onclick="LegacyUI.quick('vi notes.txt');">
+        <input class="button" type="button" value="clear" onclick="LegacyUI.quick('clear');">
+      </td>
+    </tr>
+    <tr>
+      <td id="shellDownloadArea" style="display:none; padding:4px; background:#111111;">
+        <a id="shellDownloadLink" class="download" href="#">Download file</a>
+        <span class="editorstatus"> (very old browsers may open it; use Save As)</span>
+      </td>
+    </tr>
+  </table>
+
+  <table id="editorTable" class="editor" border="0" cellspacing="0" cellpadding="0" style="display:none;">
+    <tr>
+      <td class="title">PocketVi - <span id="editorPathText"></span></td>
+      <td class="title" align="right"><span id="editorModeText">-- NORMAL --</span></td>
+    </tr>
+    <tr>
+      <td class="notice" colspan="2">Basic vi-like editor. Press i to insert, Esc for normal mode, or use the buttons and colon commands.</td>
+    </tr>
+    <tr>
+      <td class="output" colspan="2">
+        <textarea id="editorArea" name="editorArea" class="editorarea" wrap="off" onkeydown="return LegacyUI.editorKeyDown(window.event);" onkeyup="LegacyUI.editorChanged();"></textarea>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="padding:4px;">
+        <input class="button" type="button" value="Insert (i)" onclick="LegacyUI.setEditorMode('INSERT');">
+        <input class="button" type="button" value="Normal (Esc)" onclick="LegacyUI.setEditorMode('NORMAL');">
+        <input class="button" type="button" value="Save (:w)" onclick="LegacyUI.saveEditor();">
+        <a id="editorDownload" class="download" href="#" onclick="LegacyUI.refreshEditorDownload();">Download / open</a>
+        <input class="button" type="button" value="Open for Save As" onclick="return LegacyUI.openTextWindow();">
+        <input class="button" type="button" value="Close (:q)" onclick="LegacyUI.closeEditor(false);">
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="padding:4px;">
+        <form action="#" onsubmit="return LegacyUI.runEditorCommand(LegacyUI.editorCommandValue());">
+          <input id="editorCommand" name="editorCommand" class="editorcommand" type="text" value=":">
+          <input class="button" type="submit" value="Enter">
+        </form>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="padding:4px; background:#111111;">
+        <span id="editorStatus" class="editorstatus">ready</span><br>
+        <span class="editorstatus">Commands: :w :q :wq :q! :download :help | Normal keys: h l x dd</span>
+      </td>
+    </tr>
+  </table>
+  <noscript><p>JavaScript must be enabled to use PocketBox.</p></noscript>
+  <script language="JScript" type="text/javascript">
+  <!--
+  /* Some Windows CE shells do not reliably deliver BODY onload. */
+  if (window.LegacyUI) { LegacyUI.init(); }
+  //-->
+  </script>
+</body>
+</html>

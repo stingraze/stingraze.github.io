@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <title>PocketBox Shell - HTML5</title>
+  <style>
+    :root {
+      --bg: #071018;
+      --panel: #0b1621;
+      --panel-2: #101f2d;
+      --text: #d9fbe7;
+      --muted: #83a697;
+      --accent: #68f7a3;
+      --border: #214234;
+      --danger: #ff8f8f;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 50% -20%, #173248, var(--bg) 52%);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      min-height: 100%;
+      padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    }
+    body.light-theme {
+      --bg: #edf5ef;
+      --panel: #ffffff;
+      --panel-2: #e9f3ec;
+      --text: #13261b;
+      --muted: #587061;
+      --accent: #08783d;
+      --border: #bfd4c5;
+      --danger: #9f2020;
+      --shadow: rgba(40, 70, 50, 0.18);
+      background: linear-gradient(#f7fbf8, var(--bg));
+    }
+    .app {
+      width: min(100%, 1050px);
+      min-height: calc(100vh - 24px);
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto auto minmax(280px, 1fr) auto auto;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 22px 80px var(--shadow);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel-2);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .led { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 16px var(--accent); }
+    h1 { margin: 0; font-size: clamp(15px, 4vw, 20px); letter-spacing: 0.04em; }
+    .subtitle { color: var(--muted); font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .header-actions { display: flex; gap: 8px; }
+    button {
+      font: inherit;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      min-height: 38px;
+      padding: 7px 11px;
+      cursor: pointer;
+    }
+    button:hover, button:focus-visible { border-color: var(--accent); outline: none; }
+    .notice {
+      padding: 9px 16px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      font: 12px/1.45 system-ui, sans-serif;
+    }
+    #terminal-output {
+      padding: 16px;
+      overflow: auto;
+      overscroll-behavior: contain;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+      font-size: clamp(13px, 2.6vw, 15px);
+      background-image: linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 100% 24px;
+    }
+    .line { margin: 0 0 6px; }
+    .command-line { color: var(--accent); }
+    .error-line { color: var(--danger); }
+    .banner-line { color: var(--muted); }
+    .quickbar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 9px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--panel-2);
+      scrollbar-width: thin;
+    }
+    .quickbar button { min-width: max-content; min-height: 36px; }
+    form {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+    }
+    #prompt-label { color: var(--accent); white-space: nowrap; font-size: 13px; }
+    #command-input {
+      width: 100%;
+      min-width: 0;
+      min-height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--bg);
+      font: 16px/1.2 inherit;
+      padding: 10px 12px;
+      outline: none;
+    }
+    #command-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 80%); }
+    .run-button { color: var(--bg); background: var(--accent); border-color: var(--accent); font-weight: bold; }
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 13px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      font: 11px/1.3 system-ui, sans-serif;
+    }
+
+    [hidden] { display: none !important; }
+    .download-line a, .editor-download {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    body.editor-open { overflow: hidden; }
+    .editor-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(6px);
+    }
+    .editor-window {
+      width: min(1120px, 100%);
+      height: min(900px, 100%);
+      min-height: 360px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: 0 24px 100px rgba(0, 0, 0, 0.55);
+    }
+    .editor-header, .editor-toolbar, .editor-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 11px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--border);
+    }
+    .editor-header { justify-content: space-between; min-width: 0; }
+    .editor-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .editor-title strong { color: var(--accent); }
+    .editor-mode { padding: 3px 7px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; white-space: nowrap; }
+    .insert-mode { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+    #editor-area {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      resize: none;
+      border: 0;
+      outline: 0;
+      padding: 14px;
+      color: var(--text);
+      background: var(--bg);
+      font: 15px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      tab-size: 2;
+      white-space: pre;
+      overflow: auto;
+    }
+    #editor-area[readonly] { cursor: default; }
+    .editor-toolbar { flex-wrap: wrap; border-top: 1px solid var(--border); }
+    .editor-toolbar button, .editor-toolbar a {
+      min-height: 34px;
+      padding: 6px 9px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      background: var(--panel);
+      font: inherit;
+      text-decoration: none;
+    }
+    .editor-toolbar a:hover, .editor-toolbar a:focus { border-color: var(--accent); }
+    #editor-command-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 8px 11px;
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+    }
+    #editor-command {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: var(--bg);
+      font: 16px/1.2 inherit;
+    }
+    .editor-footer {
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      border-bottom: 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    @media (max-width: 560px) {
+      body { padding: 0; }
+      .app { min-height: 100%; border: 0; border-radius: 0; }
+      .subtitle { display: none; }
+      form { grid-template-columns: 1fr auto; }
+      #prompt-label { grid-column: 1 / -1; }
+      footer { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="app" aria-label="PocketBox virtual shell">
+    <header>
+      <div class="brand">
+        <span class="led" aria-hidden="true"></span>
+        <div>
+          <h1>PocketBox Shell</h1>
+          <div class="subtitle">HTML5 rich-device mode / zero dependencies</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="theme-button" type="button" aria-label="Toggle light and dark theme">Theme</button>
+        <button id="erase-button" type="button" aria-label="Erase local shell state">Reset</button>
+      </div>
+    </header>
+
+    <div class="notice">Virtual sandbox only: commands operate on an in-memory filesystem and never access the device operating system.</div>
+
+    <section id="terminal-output" role="log" aria-live="polite" aria-label="Shell output"></section>
+
+    <nav class="quickbar" aria-label="Quick commands">
+      <button type="button" data-command="help">help</button>
+      <button type="button" data-command="ls -l">ls -l</button>
+      <button type="button" data-command="pwd">pwd</button>
+      <button type="button" data-command="tree /">tree /</button>
+      <button type="button" data-command="cat README.txt">README</button>
+      <button type="button" data-command="vi notes.txt">vi notes.txt</button>
+      <button type="button" data-command="df">df</button>
+      <button type="button" data-command="clear">clear</button>
+    </nav>
+
+    <form id="command-form" autocomplete="off">
+      <label id="prompt-label" for="command-input">$</label>
+      <input id="command-input" name="command" type="text" inputmode="text" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Shell command">
+      <button class="run-button" type="submit">Run</button>
+    </form>
+
+    <footer>
+      <span id="status-text">in-memory session</span>
+      <span>Up/Down: history &middot; Ctrl+L: clear</span>
+    </footer>
+  </main>
+
+
+  <section id="editor-overlay" class="editor-overlay" hidden aria-label="PocketBox vi editor">
+    <div class="editor-window" role="dialog" aria-modal="true" aria-labelledby="editor-path-label">
+      <div class="editor-header">
+        <div class="editor-title">PocketVi &mdash; <strong id="editor-path-label"></strong></div>
+        <span id="editor-mode-label" class="editor-mode normal-mode">-- NORMAL --</span>
+      </div>
+      <textarea id="editor-area" wrap="off" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" aria-label="File editor"></textarea>
+      <div class="editor-toolbar" aria-label="Editor controls">
+        <button id="editor-insert-button" type="button">Insert (i)</button>
+        <button id="editor-normal-button" type="button">Normal (Esc)</button>
+        <button id="editor-save-button" type="button">Save (:w)</button>
+        <a id="editor-download-link" class="editor-download" href="#">Download</a>
+        <button id="editor-close-button" type="button">Close (:q)</button>
+      </div>
+      <form id="editor-command-form" autocomplete="off">
+        <input id="editor-command" type="text" inputmode="text" placeholder=":w, :q, :wq, :q!, :download, :help" aria-label="Vim command">
+        <button type="submit">Enter</button>
+      </form>
+      <div class="editor-footer">
+        <span id="editor-status">ready</span>
+        <span>Normal: h j k l &middot; w b &middot; x &middot; dd &middot; u &middot; gg/G</span>
+      </div>
+    </div>
+  </section>
+
+  <script src="pocketbox-core.js"></script>
+  <script src="pocketbox-security.js"></script>
+  <script src="pocketbox-network.js"></script>
+  <script src="modern-ui.js"></script>
+</body>
+</html>
