@@ -209,3 +209,5 @@ node test_ie4.js
 The legacy page now avoids `Function.prototype.call`, `Array.prototype.sort`, and `Array.prototype.shift` during startup and basic shell use. Some Windows CE images identify the browser as IE 5.5 but bundle an older or reduced JScript engine. The legacy UI also falls back from `getElementById` to `document.all`, retries initialization after the DOM is parsed, and prints startup errors directly in the terminal area.
 
 Use `legacy.html` on Windows CE. The richer `modern.html` remains unchanged. HTTPS, TLS, XHR/ActiveX, Blob downloads, and advanced commands still depend on the components installed in the particular Windows CE image.
+
+*Still some bugs found on legacy mode about it crashing while using browser. Needs some more work in making it lighter + bug fix.
